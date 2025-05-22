@@ -164,7 +164,10 @@ const Home = () => {
                 <TabsTrigger value="results">Results</TabsTrigger>
               </TabsList>
               <TabsContent value="upload" className="space-y-6 pt-6">
-                <FileUploader onFileUpload={handleFileUpload} />
+                <FileUploader
+                  onFileProcessed={handleFileUpload}
+                  isProcessing={isProcessing}
+                />
 
                 {parsedData.length > 0 && (
                   <div className="space-y-4">

@@ -74,61 +74,68 @@ const FileUploader = ({
   };
 
   const processFile = (file: File) => {
-    // Simulate file processing with progress
+    // Show upload progress
     setUploadProgress(0);
     const interval = setInterval(() => {
       setUploadProgress((prev) => {
-        if (prev >= 100) {
+        if (prev >= 95) {
+          // Only go up to 95% until we get the response
           clearInterval(interval);
-          return 100;
+          return 95;
         }
-        return prev + 10;
+        return prev + 5;
       });
-    }, 200);
+    }, 100);
 
-    // In a real app, you would parse the Excel file here
-    // For this example, we'll simulate successful parsing after progress completes
-    setTimeout(() => {
-      clearInterval(interval);
-      setUploadProgress(100);
+    // Create FormData to send the file
+    const formData = new FormData();
+    formData.append("file", file);
 
-      // Mock data - in a real app, this would be the parsed Excel data
-      const mockData = [
-        {
-          email: "example1@example.com",
-          name: "John Doe",
-          company: "ABC Corp",
-          product: "Recycled Paper",
-          quantity: 100,
-          port: "Shanghai",
-          address: "123 Main St",
-        },
-        {
-          email: "example2@example.com",
-          name: "Jane Smith",
-          company: "XYZ Inc",
-          product: "Plastic Pellets",
-          quantity: 200,
-          port: "Singapore",
-          address: "456 Oak Ave",
-        },
-        {
-          email: "example3@example.com",
-          name: "Bob Johnson",
-          company: "Acme Ltd",
-          product: "Metal Scraps",
-          quantity: 150,
-          port: "Rotterdam",
-          address: "789 Pine Rd",
-        },
-      ];
+    // Send the file to the API
+    fetch("http://localhost:5000/email-send/upload", {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        clearInterval(interval);
+        setUploadProgress(100);
 
-      onFileProcessed(mockData);
-      toast({
-        title: "File processed successfully",
-        description: `${file.name} has been uploaded and processed.`,
+        // Parse the Excel data from the response
+        if (data && data.result) {
+          // Convert the API response to the format expected by the app
+          const parsedData = data.result.map((item: any) => ({
+            email: item.email,
+            name: item.name || "Unknown",
+            company: item.company || "Unknown",
+            product: item.product || "Unknown",
+            quantity: item.quantity || 0,
+            port: item.port || "Unknown",
+            address: item.address || "Unknown",
+          }));
+
+          onFileProcessed(parsedData);
+          toast({
+            title: "File processed successfully",
+            description: `${file.name} has been uploaded and processed.`,
+          });
+        }
+      })
+      .catch((error) => {
+        clearInterval(interval);
+        setUploadProgress(0);
+        setError(`Failed to process file: ${error.message}`);
+        toast({
+          variant: "destructive",
+          title: "Error processing file",
+          description: `Failed to process ${file.name}: ${error.message}`,
+        });
       });
-    }, 2500);
   };
 
   const handleDrop = useCallback(

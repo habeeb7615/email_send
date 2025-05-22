@@ -225,7 +225,8 @@ const ResultsSummary = ({
                                   className="bg-red-50 dark:bg-red-900/10 px-4 py-2"
                                 >
                                   <div className="text-sm text-red-700 dark:text-red-400 p-2">
-                                    <strong>Error:</strong> {result.errorReason}
+                                    <strong>Error:</strong>{" "}
+                                    {result.errorReason || result.error}
                                   </div>
                                 </TableCell>
                               </TableRow>
